@@ -28,8 +28,7 @@ md5sum_cmd = subprocess.check_output(["which", "md5sum"]).rstrip("\n")
 credential = "{0}:{1}".format(username, password)
 
 
-#mytardis_host = "http://staging-cvl-emap-mytardis.intersect.org.au"
-mytardis_host = "http://localhost:8000"
+mytardis_host = "http://staging-cvl-emap-mytardis.intersect.org.au"
 content_header = "Content-Type: application/json"
 accept_header = "Accept: application/json"
 
