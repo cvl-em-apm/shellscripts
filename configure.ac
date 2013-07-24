@@ -1,0 +1,9 @@
+AC_INIT
+
+PACKAGE=shellscripts
+VERSION=0.1.0
+
+AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
+AC_PROG_CC
+AC_CONFIG_FILES([Makefile src/Makefile scripts/Makefile])
+AC_OUTPUT
