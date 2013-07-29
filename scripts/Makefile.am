@@ -1,1 +1,1 @@
-dist_bin_SCRIPTS = functions
+dist_bin_SCRIPTS = functions publish.sh
