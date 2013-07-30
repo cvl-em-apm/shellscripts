@@ -6,11 +6,11 @@ username = sys.argv[1]
 password = sys.argv[2]
 experiment_exists = sys.argv[3]
 experiment_name = sys.argv[4]
-'''
 experiment_id = sys.argv[5]
 dataset_exists = sys.argv[6]
 dataset_name = sys.argv[7]
 dataset_id = sys.argv[8]
+'''
 files = sys.argv[9]
 logfile = sys.argv[10]
 '''
@@ -28,20 +28,26 @@ mytardis_host = "http://staging-cvl-emap-mytardis.intersect.org.au"
 content_header = "Content-Type: application/json"
 accept_header = "Accept: application/json"
 
+# create a new experiment and return id
 def create_experiment(name, description="test experiment", institution="The University of Sydney"):
     data = '{{"title":"{0}", "description":"{1}", "institution_name":"{2}"}}'.format(name, description, institution)
     url = "{base_url}/api/v1/experiment/".format(base_url = mytardis_host)
+
     try:
-        subprocess.check_call([curl_cmd, "-s", "-H", content_header, "-H", accept_header, "-X", "POST", "-d", data, "-u", credential, url])
+        response = subprocess.check_output([curl_cmd, "-s", "-H", content_header, "-H", accept_header, "-X", "POST", "-d", data, "-u", credential, url])
+        return(response)
     except:
         print("failed to create experiment")
 
+# create a new dataset and return id
 def create_dataset(description, experiment_id, immutable="false"):
     url = "{base_url}/api/v1/dataset/".format(base_url = mytardis_host)
     experiment_uri = "/api/v1/experiment/{0}/".format(exp_id)
     data = '{{"description":"{0}", "experiments":"{1}", "immutable":"{2}"}}'.format(description, experiment_uri, immutable)
+
     try:
-        subprocess.check_output([curl_cmd, "-s", "-H", content_header, "-H", accept_header, "-X", "POST", "-d", data, "-u", credential, url])
+        response = subprocess.check_output([curl_cmd, "-s", "-H", content_header, "-H", accept_header, "-X", "POST", "-d", data, "-u", credential, url])
+        return(response)
     except:
         print("failed to create dataset")
 
@@ -52,7 +58,37 @@ def push_file(path, filename, dataset_id):
     size = os.stat(path).st_size
     mimetype = subprocess.check_output([file_cmd, "-i", "-b", path]).split(";")[0]
     metadata = '{"dataset":"{0}", "filename":"{1}", "md5sum":"{2}", "size":"{3}", "mimetype":"{4}"}'.format(dataset_uri, filename, md5sum, size, mimetype)
+
     try:
-        subprocess.check_output([curl_cmd, "-s", "-F", "attached_file={0}".format(path), "-F", "json-data={0}".format(metadata), "-u", credential, url])
+        subprocess.check_call([curl_cmd, "-s", "-F", "attached_file={0}".format(path), "-F", "json-data={0}".format(metadata), "-u", credential, url])
     except:
         print("failed to push file")
+
+def experiment_exists(id):
+    url = "{base_url}/api/v1/experiment/{id}/?format=json".format(base_url = mytardis_host, id = id)
+
+    try:
+        response = subprocess.check_output([curl_cmd, "-s", "-u", credential, url])
+
+        if response:
+            return(True)
+        else:
+            return(False)
+    except:
+        print("failed to check experiment")
+
+
+def dataset_exists(id):
+    url = "{base_url}/api/v1/dataset/{id}/?format=json".format(base_url = mytardis_host, id = id)
+
+    try:
+        response = subprocess.check_output([curl_cmd, "-s", "-u", credential, url])
+
+        if response:
+            return(True)
+        else:
+            return(False)
+    except:
+        print("failed to check dataset")
+
+print(create_experiment(experiment_name))
