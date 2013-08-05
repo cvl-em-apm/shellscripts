@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+from galaxy import eggs
 import sys
 import subprocess
 import re
@@ -28,7 +29,7 @@ md5sum_cmd = subprocess.check_output(["which", "md5sum"]).rstrip("\n")
 credential = "{0}:{1}".format(username, password)
 
 
-mytardis_host = "http://staging-cvl-emap-mytardis.intersect.org.au"
+mytardis_host = "http://localhost:8000"
 content_header = "Content-Type: application/json"
 accept_header = "Accept: application/json"
 
@@ -36,7 +37,7 @@ accept_header = "Accept: application/json"
 experiment_id_regex = re.compile(r"Location.*experiment/(\d+)/", re.MULTILINE)
 dataset_id_regex = re.compile(r"Location.*dataset/(\d+)/", re.MULTILINE)
 experiment_url_regex = re.compile(r'{base_url}/experiment/view/(\d+)/'.format(base_url = mytardis_host))
-dataset_url_regex = re.compile(r'{base_url}/dataset/view/(\d+)/'.format(base_url = mytardis_host))
+dataset_url_regex = re.compile(r'{base_url}/dataset/(\d+)'.format(base_url = mytardis_host))
 
 # create a new experiment and return id
 def create_experiment(name, description="test experiment", institution="The University of Sydney"):
@@ -113,10 +114,12 @@ def read_files():
         content = f.read().splitlines()
     return content
     
-def push_datafiles():
+def push_datafiles(dataset_id):
     for metadata in read_files():
-        filepath = metadata.split(';')[0]
-        push_file(filepath, 4)
+        if metadata.strip():
+            filepath = metadata.split(';')[0]
+            print filepath
+            push_file(filepath, dataset_id)
        
 def main():
     if has_experiment():
@@ -127,17 +130,26 @@ def main():
             print "Pushing to an existing dataset"
             dataset_id = dataset_url_regex.search(dataset_url).group(1)
             print "Pushing datafiles"
-            push_datafiles()
+            push_datafiles(dataset_id)
         else:
             print "Creating new dataset"
-            create_dataset(dataset_name, experiment_id)
+            dataset_id = create_dataset(dataset_name, experiment_id)
             print "Pushing datafiles"
-            push_datafiles()
+            push_datafiles(dataset_id)
     else:
         print "Creating new experiment and dataset"
         experiment_id = create_experiment(experiment_name)
-        create_dataset(dataset_name, experiment_id)
+        dataset_id = create_dataset(dataset_name, experiment_id)
         print "Pushing datafiles"
-        push_datafiles()
+        push_datafiles(dataset_id)
 
+def debug():
+    print "Printing all relevant parameters"
+    print existing_experiment
+    print experiment_name
+    print experiment_url
+    print existing_dataset
+    print dataset_name
+    print dataset_url
+      
 main()

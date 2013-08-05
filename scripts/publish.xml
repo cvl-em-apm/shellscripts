@@ -1,0 +1,68 @@
+<tool id="mytardis" name="Publish" require_login="True" version="1.0.0">
+    <description>datasets to MyTardis</description>
+    <command interpreter="python">			
+   		#if $experiment.has_experiment_select == "true"   			
+       		#if $experiment.dataset.has_dataset_select == "true"
+       			publish.py $username $password $experiment.has_experiment_select "null" $experiment.exp_url $experiment.dataset.has_dataset_select "null" $experiment.dataset.ds_url $filelist
+       		#else
+       			publish.py $username $password $experiment.has_experiment_select "null" $experiment.exp_url $experiment.dataset.has_dataset_select "$experiment.dataset.ds_title" null_url $filelist
+       		#end if
+       	#else
+   			publish.py $username $password $experiment.has_experiment_select "$experiment.exp_title" null_url false "$experiment.ds_title" null_url $filelist
+       	#end if
+    </command>
+    
+    <inputs>
+        <param name="username" label="Enter your username" type="text" help="Username used to connect to MyTardis" area="True" size="1x40" />
+        <param name="password" label="Enter your password" type="text" help="Password used to connect to MyTardis" area="True" size="1x40" />
+		
+		<conditional name="experiment">
+			<param name="has_experiment_select" type="select" label="Push to existing experiment?">
+	            <option value="true" selected="true">Yes</option>
+	            <option value="false">No</option>
+	        </param>
+	        
+			<when value="true">
+		        <param name="exp_url" label="Experiment URL" type="text" help="For example: http://mytardis/experiment/view/3/" area="True" size="1x40"/>  
+
+				<conditional name="dataset">
+					<param name="has_dataset_select" type="select" label="Push to existing dataset?">
+		           		<option value="true" selected="true">Yes</option>
+		           		<option value="false">No</option>
+		       		</param>
+		       		
+		       		<when value="true">
+		       			<param name="ds_url" label="Dataset URL" type="text" help="For example: http://mytardis/dataset/5" area="True" size="1x40" />
+		       		</when>
+		       		
+		       		<when value="false">
+		       			<param name="ds_title" label="Dataset name" type="text" value="Galaxy dataset" area="True" size="1x40" />
+		       		</when>
+				</conditional>			
+			</when>
+			
+			<when value="false">
+				<param name="exp_title" label="Experiment name" type="text" value="Galaxy experiment" area="True" size="1x40" />
+				<param name="ds_title" label="Dataset name" type="text" value="Galaxy dataset" area="True" size="1x40" />
+			</when>
+		</conditional>	      
+
+        <repeat name="file" title="File" >
+            <param name="includefile" type="data" label="Select the file to include in the dataset" />
+            <param name="renamefile" type="text" label="Enter the filename to be set" help="The filename that will appear on MyTardis" area="True"  size="1x40" />
+        </repeat>
+    </inputs>
+
+    <outputs>
+        <data name="output" format="txt" />
+    </outputs>
+    <configfiles>
+        <configfile name="filelist">
+#for $i, $s in enumerate ( $file )
+${s.includefile};$(s.renamefile)
+#end for
+        </configfile>
+    </configfiles>
+    <help>
+    </help>
+</tool>
