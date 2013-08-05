@@ -29,7 +29,7 @@ md5sum_cmd = subprocess.check_output(["which", "md5sum"]).rstrip("\n")
 credential = "{0}:{1}".format(username, password)
 
 
-mytardis_host = "http://localhost:8000"
+mytardis_host = "http://staging-cvl-emap-mytardis.intersect.org.au"
 content_header = "Content-Type: application/json"
 accept_header = "Accept: application/json"
 
@@ -56,6 +56,7 @@ def create_dataset(description, experiment_id, immutable="false"):
     response_header = subprocess.check_output([curl_cmd, "-s", "-i", "-H", content_header, "-H", accept_header, "-X", "POST", "-d", data, "-u", credential, url])
     return(dataset_id_regex.search(response_header).group(1))
 
+# pushes one file
 def push_file(file, dataset_id):
     url = "{base_url}/api/v1/dataset_file/".format(base_url = mytardis_host)
     dataset_uri = "/api/v1/dataset/{0}/".format(dataset_id)
@@ -96,6 +97,7 @@ def dataset_exists(id):
     except:
         print("failed to check dataset")
 
+# convert arg into boolean
 def has_experiment():
     if existing_experiment == "true":
         return(True)
@@ -108,17 +110,18 @@ def has_dataset():
     elif existing_dataset == "false":
         return(False)
 
+# read output.txt file containing directories of files
 def read_files():
     content = None
     with open(files, "r") as f:
         content = f.read().splitlines()
     return content
-    
+
+# loop through the result of output.txt and pushes files sequentially
 def push_datafiles(dataset_id):
     for metadata in read_files():
         if metadata.strip():
             filepath = metadata.split(';')[0]
-            print filepath
             push_file(filepath, dataset_id)
        
 def main():
