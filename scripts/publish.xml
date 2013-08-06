@@ -13,8 +13,12 @@
     </command>
     
     <inputs>
-        <param name="username" label="Enter your username" type="text" help="Username used to connect to MyTardis" area="True" size="1x40" />
-        <param name="password" label="Enter your password" type="text" help="Password used to connect to MyTardis" area="True" size="1x40" />
+        <param name="username" label="Enter your username" type="text" help="Username used to connect to MyTardis" area="True" size="1x40" >
+        	<validator type="empty_field" message="Must specify username"/>
+        </param>
+        <param name="password" label="Enter your password" type="text" help="Password used to connect to MyTardis" area="True" size="1x40" >
+          	<validator type="empty_field" message="Must specify password"/>
+        </param>
 		
 		<conditional name="experiment">
 			<param name="has_experiment_select" type="select" label="Push to existing experiment?">
@@ -23,7 +27,9 @@
 	        </param>
 	        
 			<when value="true">
-		        <param name="exp_url" label="Experiment URL" type="text" help="For example: http://mytardis/experiment/view/3/" area="True" size="1x40"/>  
+		        <param name="exp_url" label="Experiment URL" type="text" help="For example: http://mytardis/experiment/view/3/" area="True" size="1x40">
+		        	<validator type="empty_field" message="Must specify experiment URL"/>
+		        </param>  
 
 				<conditional name="dataset">
 					<param name="has_dataset_select" type="select" label="Push to existing dataset?">
@@ -32,24 +38,35 @@
 		       		</param>
 		       		
 		       		<when value="true">
-		       			<param name="ds_url" label="Dataset URL" type="text" help="For example: http://mytardis/dataset/5" area="True" size="1x40" />
+		       			<param name="ds_url" label="Dataset URL" type="text" help="For example: http://mytardis/dataset/5" area="True" size="1x40" >
+		       				<validator type="empty_field" message="Must specify dataset URL" />
+		       			</param>
 		       		</when>
 		       		
 		       		<when value="false">
-		       			<param name="ds_title" label="Dataset name" type="text" value="Galaxy dataset" area="True" size="1x40" />
+		       			<param name="ds_title" label="Dataset name" type="text" value="Galaxy dataset" area="True" size="1x40" >
+		       				<validator type="empty_field" message="Must specify dataset name"/>
+		       			</param>
 		       		</when>
 				</conditional>			
 			</when>
 			
 			<when value="false">
-				<param name="exp_title" label="Experiment name" type="text" value="Galaxy experiment" area="True" size="1x40" />
-				<param name="ds_title" label="Dataset name" type="text" value="Galaxy dataset" area="True" size="1x40" />
+				<param name="exp_title" label="Experiment name" type="text" value="Galaxy experiment" area="True" size="1x40" >
+					<validator type="empty_field" message="Must specify experiment title"/>
+				</param>
+				<param name="ds_title" label="Dataset name" type="text" value="Galaxy dataset" area="True" size="1x40" >
+					<validator type="empty_field" message="Must specify dataset title"/>
+				</param>
 			</when>
 		</conditional>	      
 
-        <repeat name="file" title="File" >
-            <param name="includefile" type="data" label="Select the file to include in the dataset" />
-            <param name="renamefile" type="text" label="Enter the filename to be set" help="The filename that will appear on MyTardis" area="True"  size="1x40" />
+        <repeat name="file" title="File" min="1">
+            <param name="includefile" type="data" label="Select the file to include in the dataset" >
+            	<validator type="empty_field" message="Must specify filepath" />
+            </param>
+            <param name="renamefile" type="text" label="Enter the filename to be set" help="The filename that will appear on MyTardis" area="True"  size="1x40" >
+            </param>
         </repeat>
     </inputs>
 
@@ -63,6 +80,10 @@ ${s.includefile};$(s.renamefile)
 #end for
         </configfile>
     </configfiles>
+    
     <help>
+.. class:: infomark
+
+This tool can be used to send files to MyTardis that are up to 2GB in size. If you plan to send larger files then please upload directly through MyTardis.
     </help>
 </tool>

@@ -57,13 +57,16 @@ def create_dataset(description, experiment_id, immutable="false"):
     return(dataset_id_regex.search(response_header).group(1))
 
 # pushes one file
-def push_file(file, dataset_id):
+def push_file(file, dataset_id, new_filename=None):
     url = "{base_url}/api/v1/dataset_file/".format(base_url = mytardis_host)
     dataset_uri = "/api/v1/dataset/{0}/".format(dataset_id)
     md5sum = subprocess.check_output([md5sum_cmd, file]).split()[0]
     size = os.stat(file).st_size
     mimetype = subprocess.check_output([file_cmd, "-i", "-b", file]).split(";")[0]
-    metadata = '{{"dataset":"{0}", "filename":"{1}", "md5sum":"{2}", "size":"{3}", "mimetype":"{4}"}}'.format(dataset_uri, file, md5sum, size, mimetype)
+    if new_filename is None:
+        metadata = '{{"dataset":"{0}", "filename":"{1}", "md5sum":"{2}", "size":"{3}", "mimetype":"{4}"}}'.format(dataset_uri, file, md5sum, size, mimetype)
+    else:
+        metadata = '{{"dataset":"{0}", "filename":"{1}", "md5sum":"{2}", "size":"{3}", "mimetype":"{4}"}}'.format(dataset_uri, new_filename, md5sum, size, mimetype)
 
     try:
         subprocess.check_call([curl_cmd, "-s", "-F", "attached_file={0}".format(file), "-F", "json_data={0}".format(metadata), "-u", credential, url])
@@ -121,8 +124,11 @@ def read_files():
 def push_datafiles(dataset_id):
     for metadata in read_files():
         if metadata.strip():
-            filepath = metadata.split(';')[0]
-            push_file(filepath, dataset_id)
+            fp = metadata.split(';')
+            if fp[1] is not None:
+                push_file(fp[0], dataset_id, fp[1])
+            else:
+                push_file(fp[0], dataset_id)
        
 def main():
     if has_experiment():
