@@ -1,1 +1,1 @@
-dist_bin_SCRIPTS = functions publish.sh
+dist_bin_SCRIPTS = functions publish.py

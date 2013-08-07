@@ -1,7 +1,7 @@
 # -*-Shell-script-*-
 #
-# cvl_functions This file contains functions to be used by most or all
-#               shell scripts in the tool runner scripts.
+# functions This file contains functions to be used by most or all
+#           shell scripts in the tool runner scripts.
 #
 
 originating_system=`tr -d '\n' < /etc/originating_system`
@@ -10,24 +10,41 @@ package=`rpm -qf $0`
 name=`echo "$package" | cut -d- -f2`
 version=`echo "$package" | cut -d- -f3`
 common_name="$originating_system $originating_system_version $name $version"
+DIR=$(dirname "${BASH_SOURCE[0]}")
+publish_cmd="$DIR/publish.py"
+current_date=$(date +%F)
+api_key="$HOME/mytardis.key"
 
 log_start() {
-	start_ts=`date +"%F %T"`
-	start_file_name="$start_ts ${common_name}.start"
-	stdin_file_name="$start_ts ${common_name}.stdin"
-	stdout_file_name="$start_ts ${common_name}.stdout"
-	stderr_file_name="$start_ts ${common_name}.stderr"
-	export stdin_file_name stdout_file_name stderr_file_name
-	touch "$start_file_name"
-	touch "$stdin_file_name"
-	touch "$stdout_file_name"
-	touch "$stderr_file_name"
-	sudo /usr/local/logkeys/0.1.1a/bin/logkeys --start --output "$stdin_file_name"
+  start_ts=`date +"%F %T"`
+  start_file_name="$start_ts ${common_name}.start"
+  timing_file_name="$start_ts ${common_name}.timing"
+  stdio_file_name="$start_ts ${common_name}.stdio"
+  stderr_file_name="$start_ts ${common_name}.stderr"
+  export timing_file_name stdio_file_name stderr_file_name
+  touch "$start_file_name"
+  touch "$timing_file_name"
+  touch "$stdio_file_name"
+  touch "$stderr_file_name"
+  for i in "$start_file_name" "$timing_file_name" "$stdio_file_name" "$stderr_file_name"
+  do
+    du -h "$i"
+    rm "$i"
+  done
 }
 
 log_stop() {
-	sudo /usr/local/logkeys/0.1.1a/bin/logkeys --kill
-	stop_ts=`date +"%F %T"`
-	stop_file_name="$stop_ts ${common_name}.stop"
-	touch "$stop_file_name"
+  stop_ts=`date +"%F %T"`
+  stop_file_name="$stop_ts ${common_name}.stop"
+  touch "$stop_file_name"
+  check_api_key
+}
+
+check_api_key() {
+  if [ ! -f $api_key ]
+  then
+    echo -ne "MyTARDIS key file: "
+    read key_file
+    cp $key_file $api_key
+  fi
 }

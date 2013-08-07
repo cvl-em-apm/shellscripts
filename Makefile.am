@@ -1,2 +1,2 @@
 SUBDIRS = src scripts
-EXTRA_DIST = scripts/functions scripts/publish.sh
+EXTRA_DIST = scripts/functions scripts/publish.py
