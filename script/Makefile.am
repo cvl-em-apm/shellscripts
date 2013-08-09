@@ -1,1 +1,2 @@
-dist_bin_SCRIPTS = functions MRF-launcher.sh mytardis-api-rebuild publish.py publish.sh publish.xml push_file.py
+dist_dataroot_DATA = functions
+dist_bin_SCRIPTS = mytardis-api-rebuild publish.py push_file.py
