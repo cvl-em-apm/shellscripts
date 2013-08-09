@@ -6,13 +6,14 @@
 
 originating_system=`tr -d '\n' < /etc/originating_system`
 originating_system_version=`tr -d '\n' < /etc/originating_system_version`
-package=`rpm -qf $0`
-name=`echo "$package" | cut -d- -f2`
-version=`echo "$package" | cut -d- -f3`
+cwd=$(dirname $0)
+name=`echo "$cwd" | cut -d/ -f4`
+version=`echo "$cwd" | cut -d/ -f5`
 common_name="$originating_system $originating_system_version $name $version"
-DIR=$(dirname "${BASH_SOURCE[0]}")
-publish_cmd="$DIR/publish.py"
+csd=$(dirname "${BASH_SOURCE[0]}")
+push_cmd="$csd/push_file.py"
 current_date=$(date +%F)
+history_path="$HOME/Application Execution Historyi/$current_date"
 api_key="$HOME/mytardis.key"
 
 log_start() {
@@ -21,15 +22,11 @@ log_start() {
   timing_file_name="$start_ts ${common_name}.timing"
   stdio_file_name="$start_ts ${common_name}.stdio"
   stderr_file_name="$start_ts ${common_name}.stderr"
-  export timing_file_name stdio_file_name stderr_file_name
-  touch "$start_file_name"
-  touch "$timing_file_name"
-  touch "$stdio_file_name"
-  touch "$stderr_file_name"
+  export start_file_name timing_file_name stdio_file_name stderr_file_name
+  
   for i in "$start_file_name" "$timing_file_name" "$stdio_file_name" "$stderr_file_name"
   do
-    du -h "$i"
-    rm "$i"
+    touch "$i"
   done
 }
 
@@ -38,6 +35,11 @@ log_stop() {
   stop_file_name="$stop_ts ${common_name}.stop"
   touch "$stop_file_name"
   check_api_key
+
+  for i in "$start_file_name" "$timing_file_name" "$stdio_file_name" "$stderr_file_name" "$stop_file_name"
+  do
+    python $push_cmd $api_key "Application Execution History" "$current_date" "$i"
+  done
 }
 
 check_api_key() {

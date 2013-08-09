@@ -8,6 +8,7 @@ import subprocess
 import re
 import os
 import json
+import ConfigParser
 
 key_file = sys.argv[1]
 experiment_title = sys.argv[2]
@@ -17,7 +18,12 @@ curl_cmd = subprocess.check_output(["which", "curl"]).rstrip("\n")
 file_cmd = subprocess.check_output(["which", "file"]).rstrip("\n")
 md5sum_cmd = subprocess.check_output(["which", "md5sum"]).rstrip("\n")
 credential = open(key_file, 'r').read()
-mytardis_host = "http://localhost:8000"
+
+# get mytardis host configuration
+cvl_emap_conf = ConfigParser.SafeConfigParser()
+cvl_emap_conf.read("/usr/local/etc/cvl_emap.conf")
+mytardis_host = cvl_emap_conf.get('mytardis', 'url')
+
 content_header = "Content-Type: application/json"
 accept_header = "Accept: application/json"
 auth_header = "Authorization: {0}".format(credential)
@@ -57,6 +63,8 @@ def push_file(path, dataset_uri, new_filename=None):
     else:
         metadata = '{{"dataset":"{0}", "filename":"{1}", "md5sum":"{2}", "size":"{3}", "mimetype":"{4}"}}'.format(dataset_uri, new_filename, md5sum, size, mimetype)
 
+    response_header = None
+
     try:
         response_header = subprocess.check_output([curl_cmd, "-s", "-i", "-F", "attached_file={0}".format(path), "-F", "json_data={0}".format(metadata), "-H", auth_header, url])
     except:
@@ -66,6 +74,8 @@ def push_file(path, dataset_uri, new_filename=None):
 # check experiment by title, return uri if found, false if not
 def experiment_exists(title):
     url = "{base_url}/api/v1/experiment/?format=json".format(base_url=mytardis_host)
+
+    response = None
 
     try:
         response = subprocess.check_output([curl_cmd, "-s", "-H", auth_header, url])
@@ -93,6 +103,8 @@ def experiment_exists(title):
 # check dataset by description, return uri if found, false if not
 def dataset_exists(description):
     url = "{base_url}/api/v1/dataset/?format=json".format(base_url=mytardis_host)
+
+    response = None
 
     try:
         response = subprocess.check_output([curl_cmd, "-s", "-H", auth_header, url])

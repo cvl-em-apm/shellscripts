@@ -1,0 +1,22 @@
+#!/bin/bash
+# Mock MRF
+
+echo -ne "Enter Data Filename: "
+read datafile
+echo -ne "Enter Range Filename [*.rng] : "
+read rangefile
+echo "Range File:  AB.rng"
+echo
+echo "range 1: Aye            A"
+echo "range 2: Bee            B"
+echo -ne "How many nearest neighbours (kNN >= 1)? "
+read neighbours
+echo -ne "What maximum radius (r_max nm) should the kNN be within (r_max > 0.0)? "
+read r_max
+echo -ne "Solute element (0 for end of list) [Range Number 2] ? "
+read rangeno
+echo "range 1: Aye"
+echo "MRF --datafile $datafile --rangfile $rangefile --neighbours $neighbours --r_max $r_max --rangeno $rangeno"
+sleep 10
+echo "Job done"
+exit
