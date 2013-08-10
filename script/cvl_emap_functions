@@ -6,47 +6,63 @@
 
 originating_system=`tr -d '\n' < /etc/originating_system`
 originating_system_version=`tr -d '\n' < /etc/originating_system_version`
-cwd=$(dirname $0)
+cwd=$(dirname "$0")
 name=`echo "$cwd" | cut -d/ -f4`
 version=`echo "$cwd" | cut -d/ -f5`
 common_name="$originating_system $originating_system_version $name $version"
-csd=$(dirname "${BASH_SOURCE[0]}")
-push_cmd="$csd/push_file.py"
-current_date=$(date +%F)
-history_path="$HOME/Application Execution Historyi/$current_date"
+push_cmd="/usr/local/bin/push_file.py"
 api_key="$HOME/mytardis.key"
 
 log_start() {
-  start_ts=`date +"%F %T"`
-  start_file_name="$start_ts ${common_name}.start"
-  timing_file_name="$start_ts ${common_name}.timing"
-  stdio_file_name="$start_ts ${common_name}.stdio"
-  stderr_file_name="$start_ts ${common_name}.stderr"
-  export start_file_name timing_file_name stdio_file_name stderr_file_name
+  start_ts=$(date +"%F %T")
+  start_date=$(echo "$start_ts" | awk '{print $1}')
+  start_history_path="$HOME/Application Execution History/$start_date"
+  if [[ ! -d "$start_history_path" ]]
+  then
+    mkdir -p "$start_history_path"
+  fi
+  start_file_path="$start_history_path/$start_ts ${common_name}.start"
+  timing_file_path="$start_history_path/$start_ts ${common_name}.timing"
+  stdio_file_path="$start_history_path/$start_ts ${common_name}.stdio"
+  stderr_file_path="$start_history_path/$start_ts ${common_name}.stderr"
+  export start_file_path timing_file_path stdio_file_path stderr_file_path
   
-  for i in "$start_file_name" "$timing_file_name" "$stdio_file_name" "$stderr_file_name"
+  for i in "$start_file_path" "$timing_file_path" "$stdio_file_path" "$stderr_file_path"
   do
     touch "$i"
   done
 }
 
 log_stop() {
-  stop_ts=`date +"%F %T"`
-  stop_file_name="$stop_ts ${common_name}.stop"
-  touch "$stop_file_name"
+  stop_ts=$(date +"%F %T")
+  stop_date=$(echo "$stop_ts" | awk '{print $1}')
+  stop_history_path="$HOME/Application Execution History/$stop_date"
+  if [[ ! -d "$stop_history_path" ]]
+  then
+    mkdir -p "$stop_history_path"
+  fi
+  stop_file_path="$stop_history_path/$stop_ts ${common_name}.stop"
+  touch "$stop_file_path"
   check_api_key
 
-  for i in "$start_file_name" "$timing_file_name" "$stdio_file_name" "$stderr_file_name" "$stop_file_name"
+  echo -ne "Uploading data to MyTARDIS ..."
+  for i in "$start_file_path" "$timing_file_path" "$stdio_file_path" "$stderr_file_path"
   do
-    python $push_cmd $api_key "Application Execution History" "$current_date" "$i"
+    python $push_cmd "$api_key" "Application Execution History" "$start_date" "$i"
   done
+  python $push_cmd "$api_key" "Application Execution History" "$stop_date" "$stop_file_path"
+  echo " done"
+  echo
+
+  echo -ne "Press Enter to exit"
+  read enter
 }
 
 check_api_key() {
-  if [ ! -f $api_key ]
+  if [[ ! -f "$api_key" ]]
   then
     echo -ne "MyTARDIS key file: "
     read key_file
-    cp $key_file $api_key
+    cp "$key_file" "$api_key"
   fi
 }

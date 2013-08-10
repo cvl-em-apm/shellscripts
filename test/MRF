@@ -16,7 +16,7 @@ read r_max
 echo -ne "Solute element (0 for end of list) [Range Number 2] ? "
 read rangeno
 echo "range 1: Aye"
-echo "MRF --datafile $datafile --rangfile $rangefile --neighbours $neighbours --r_max $r_max --rangeno $rangeno"
+echo "MRF --datafile=\"$datafile\" --rangfile=\"$rangefile\" --neighbours=$neighbours --r_max=$r_max --rangeno=$rangeno"
 sleep 10
 echo "Job done"
 exit

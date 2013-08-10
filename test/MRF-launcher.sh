@@ -5,5 +5,5 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 log_start
-script -q -c "$DIR/MRF 2>'$stderr_file_name'" --timing="$timing_file_name" "$stdio_file_name"
+script -q -c "$DIR/MRF 2>'$stderr_file_path'" --timing="$timing_file_path" "$stdio_file_path"
 log_stop

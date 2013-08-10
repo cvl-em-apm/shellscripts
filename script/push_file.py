@@ -10,13 +10,27 @@ import os
 import json
 import ConfigParser
 
+def check_output(*popenargs, **kwargs):
+    if 'stdout' in kwargs:
+        raise ValueError('stdout argument not allowed, it will be overridden.')
+    process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+    output, unused_err = process.communicate()
+    retcode = process.poll()
+    if retcode:
+        cmd = kwargs.get("args")
+        if cmd is None:
+            cmd = popenargs[0]
+        raise CalledProcessError(retcode, cmd, output=output)
+    return output
+
+
 key_file = sys.argv[1]
 experiment_title = sys.argv[2]
 dataset_description = sys.argv[3]
 file_path = sys.argv[4]
-curl_cmd = subprocess.check_output(["which", "curl"]).rstrip("\n")
-file_cmd = subprocess.check_output(["which", "file"]).rstrip("\n")
-md5sum_cmd = subprocess.check_output(["which", "md5sum"]).rstrip("\n")
+curl_cmd = check_output(["which", "curl"]).rstrip("\n")
+file_cmd = check_output(["which", "file"]).rstrip("\n")
+md5sum_cmd = check_output(["which", "md5sum"]).rstrip("\n")
 credential = open(key_file, 'r').read()
 
 # get mytardis host configuration
@@ -38,7 +52,7 @@ def create_experiment(title, description="This is an experiment", institution_na
     data = '{{"title":"{0}", "description":"{1}", "institution_name":"{2}"}}'.format(title, description, institution_name)
     url = "{base_url}/api/v1/experiment/".format(base_url=mytardis_host)
 
-    response_header = subprocess.check_output([curl_cmd, "-s", "-i", "-H", content_header, "-H", accept_header, "-H", auth_header, "-X", "POST", "-d", data, url])
+    response_header = check_output([curl_cmd, "-s", "-i", "-H", content_header, "-H", accept_header, "-H", auth_header, "-X", "POST", "-d", data, url])
     return(experiment_uri_regex.search(response_header).group(1))
 
 
@@ -47,16 +61,16 @@ def create_dataset(description, experiment_uri, immutable="false"):
     data = '{{"description":"{0}", "experiments":["{1}"], "immutable":{2}}}'.format(description, experiment_uri, immutable)
     url = "{base_url}/api/v1/dataset/".format(base_url=mytardis_host)
 
-    response_header = subprocess.check_output([curl_cmd, "-s", "-i", "-H", content_header, "-H", accept_header, "-H", auth_header, "-X", "POST", "-d", data, url])
+    response_header = check_output([curl_cmd, "-s", "-i", "-H", content_header, "-H", accept_header, "-H", auth_header, "-X", "POST", "-d", data, url])
     return(dataset_uri_regex.search(response_header).group(1))
 
 
 # push one file
 def push_file(path, dataset_uri, new_filename=None):
     url = "{base_url}/api/v1/dataset_file/".format(base_url=mytardis_host)
-    md5sum = subprocess.check_output([md5sum_cmd, path]).split()[0]
+    md5sum = check_output([md5sum_cmd, path]).split()[0]
     size = os.stat(path).st_size
-    mimetype = subprocess.check_output([file_cmd, "-i", "-b", path]).split(";")[0]
+    mimetype = check_output([file_cmd, "-i", "-b", path]).split(";")[0]
 
     if new_filename is None:
         metadata = '{{"dataset":"{0}", "filename":"{1}", "md5sum":"{2}", "size":"{3}", "mimetype":"{4}"}}'.format(dataset_uri, os.path.basename(path), md5sum, size, mimetype)
@@ -66,7 +80,7 @@ def push_file(path, dataset_uri, new_filename=None):
     response_header = None
 
     try:
-        response_header = subprocess.check_output([curl_cmd, "-s", "-i", "-F", "attached_file={0}".format(path), "-F", "json_data={0}".format(metadata), "-H", auth_header, url])
+        response_header = check_output([curl_cmd, "-s", "-i", "-F", "attached_file={0}".format(path), "-F", "json_data={0}".format(metadata), "-H", auth_header, url])
     except:
         print("Server error")
 
@@ -78,7 +92,7 @@ def experiment_exists(title):
     response = None
 
     try:
-        response = subprocess.check_output([curl_cmd, "-s", "-H", auth_header, url])
+        response = check_output([curl_cmd, "-s", "-H", auth_header, url])
     except:
         print("Server error")
 
@@ -107,7 +121,7 @@ def dataset_exists(description):
     response = None
 
     try:
-        response = subprocess.check_output([curl_cmd, "-s", "-H", auth_header, url])
+        response = check_output([curl_cmd, "-s", "-H", auth_header, url])
     except:
         print("Server error")
 
