@@ -1,0 +1,20 @@
+#!/bin/bash
+sudo service httpd stop
+cd /home/mytardis/mytardis
+git pull
+git checkout mytardis-api
+echo
+echo -en '\E[;32m'
+git tag
+tput sgr0
+echo
+echo -ne "Please select tag to build: "
+read tag
+git checkout $tag
+unset PYTHON_SETTINGS_MODULE
+find . -name '*.py[co]' -delete
+python bootstrap.py
+bin/buildout -c buildout-production.cfg install
+bin/django test --settings=tardis.test_settings
+bin/django syncdb && bin/django migrate
+sudo service httpd start
