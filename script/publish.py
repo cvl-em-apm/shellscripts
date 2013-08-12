@@ -4,28 +4,27 @@ import subprocess
 import re
 import os
 
-apikey_file = sys.argv[1]
-existing_experiment = sys.argv[2]
-experiment_name = sys.argv[3]
-experiment_url = sys.argv[4]
-existing_dataset = sys.argv[5]
-dataset_name = sys.argv[6]
-dataset_url = sys.argv[7]
-files = sys.argv[8]
+existing_experiment = sys.argv[1]
+experiment_name = sys.argv[2]
+experiment_url = sys.argv[3]
+existing_dataset = sys.argv[4]
+dataset_name = sys.argv[5]
+dataset_url = sys.argv[6]
+files = sys.argv[7]
 
 datafile_metadata = ""
 experiment_response_id = ""
 dataset_response_id = ""
-afile = ""
 curl_cmd = subprocess.check_output(["which", "curl"]).rstrip("\n")
 file_cmd = subprocess.check_output(["which", "file"]).rstrip("\n")
 md5sum_cmd = subprocess.check_output(["which", "md5sum"]).rstrip("\n")
 
-mytardis_host = "http://staging-cvl-emap-mytardis.intersect.org.au"
+mytardis_host = "http://localhost:8000"
 content_header = "Content-Type: application/json"
 accept_header = "Accept: application/json"
 
 apikey = ""
+apikey_file = "/data/keys/charles.key"
 with open(apikey_file, 'r') as f:
   apikey = f.readline().splitlines()[0]
 
