@@ -48,7 +48,7 @@ dataset_uri_regex = re.compile(r"Location.*(/api/v1/dataset/\d+/)", re.MULTILINE
 
 
 # create a new experiment and return uri
-def create_experiment(title, description="This experiment holds the history of application use on both the Workbench and Galaxy", institution_name="The University of Sydney"):
+def create_experiment(title, description="This experiment holds the history of atom probe application use on the Characterisation Virtual Laboratory (NeCTAR CVL).", institution_name="The University of Sydney"):
     data = '{{"title":"{0}", "description":"{1}", "institution_name":"{2}"}}'.format(title, description, institution_name)
     url = "{base_url}/api/v1/experiment/".format(base_url=mytardis_host)
 
