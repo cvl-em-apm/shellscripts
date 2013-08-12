@@ -3,23 +3,17 @@
     <command interpreter="python">			
    		#if $experiment.has_experiment_select == "true"   			
        		#if $experiment.dataset.has_dataset_select == "true"
-       			publish.py $username $password $experiment.has_experiment_select "null" $experiment.exp_url $experiment.dataset.has_dataset_select "null" $experiment.dataset.ds_url $filelist
+       			publish.py $experiment.has_experiment_select "null" $experiment.exp_url $experiment.dataset.has_dataset_select "null" $experiment.dataset.ds_url $filelist
        		#else
-       			publish.py $username $password $experiment.has_experiment_select "null" $experiment.exp_url $experiment.dataset.has_dataset_select "$experiment.dataset.ds_title" null_url $filelist
+       			publish.py $experiment.has_experiment_select "null" $experiment.exp_url $experiment.dataset.has_dataset_select "$experiment.dataset.ds_title" null_url $filelist
        		#end if
        	#else
-   			publish.py $username $password $experiment.has_experiment_select "$experiment.exp_title" null_url false "$experiment.ds_title" null_url $filelist
+   			publish.py $experiment.has_experiment_select "$experiment.exp_title" null_url false "$experiment.ds_title" null_url $filelist
        	#end if
     </command>
     
     <inputs>
-        <param name="username" label="Enter your username" type="text" help="Username used to connect to MyTardis" area="True" size="1x40" >
-        	<validator type="empty_field" message="Must specify username"/>
-        </param>
-        <param name="password" label="Enter your password" type="text" help="Password used to connect to MyTardis" area="True" size="1x40" >
-          	<validator type="empty_field" message="Must specify password"/>
-        </param>
-		
+		<!-- <param name="apikey" type="data" label="API key"></param> -->
 		<conditional name="experiment">
 			<param name="has_experiment_select" type="select" label="Push to existing experiment?">
 	            <option value="true" selected="true">Yes</option>

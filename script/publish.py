@@ -1,37 +1,34 @@
 #!/usr/bin/env python
-from galaxy import eggs
 import sys
 import subprocess
 import re
 import os
 
-username = sys.argv[1]
-password = sys.argv[2]
-existing_experiment = sys.argv[3]
-experiment_name = sys.argv[4]
-experiment_url = sys.argv[5]
-existing_dataset = sys.argv[6]
-dataset_name = sys.argv[7]
-dataset_url = sys.argv[8]
-files = sys.argv[9]
-
-'''
-logfile = sys.argv[10]
-'''
+existing_experiment = sys.argv[1]
+experiment_name = sys.argv[2]
+experiment_url = sys.argv[3]
+existing_dataset = sys.argv[4]
+dataset_name = sys.argv[5]
+dataset_url = sys.argv[6]
+files = sys.argv[7]
 
 datafile_metadata = ""
 experiment_response_id = ""
 dataset_response_id = ""
-afile = ""
 curl_cmd = subprocess.check_output(["which", "curl"]).rstrip("\n")
 file_cmd = subprocess.check_output(["which", "file"]).rstrip("\n")
 md5sum_cmd = subprocess.check_output(["which", "md5sum"]).rstrip("\n")
-credential = "{0}:{1}".format(username, password)
 
-
-mytardis_host = "http://staging-cvl-emap-mytardis.intersect.org.au"
+mytardis_host = "http://localhost:8000"
 content_header = "Content-Type: application/json"
 accept_header = "Accept: application/json"
+
+apikey = ""
+apikey_file = "/data/keys/charles.key"
+with open(apikey_file, 'r') as f:
+  apikey = f.readline().splitlines()[0]
+
+authorization_header = 'Authorization: {0}'.format(apikey)
 
 # regex expressions
 experiment_id_regex = re.compile(r"Location.*experiment/(\d+)/", re.MULTILINE)
@@ -42,18 +39,22 @@ dataset_url_regex = re.compile(r'{base_url}/dataset/(\d+)'.format(base_url = myt
 # create a new experiment and return id
 def create_experiment(name, description="test experiment", institution="The University of Sydney"):
     data = '{{"title":"{0}", "description":"{1}", "institution_name":"{2}"}}'.format(name, description, institution)
+    print data
     url = "{base_url}/api/v1/experiment/".format(base_url = mytardis_host)
+    print url
+    print authorization_header
+    response_header = subprocess.check_output([curl_cmd, "-s", "-i", "-H", authorization_header, "-H", content_header, "-H", accept_header, "-X", "POST", "-d", data, url])
 
-    response_header = subprocess.check_output([curl_cmd, "-s", "-i", "-H", content_header, "-H", accept_header, "-X", "POST", "-d", data, "-u", credential, url])
+    print response_header
     return(experiment_id_regex.search(response_header).group(1))
 
 # create a new dataset and return id
 def create_dataset(description, experiment_id, immutable="false"):
     url = "{base_url}/api/v1/dataset/".format(base_url = mytardis_host)
     experiment_uri = "/api/v1/experiment/{0}/".format(experiment_id)
-    data = '{{"description":"{0}", "experiments":["{1}"], "immutable":"{2}"}}'.format(description, experiment_uri, immutable)
+    data = '{{"description":"{0}", "experiments":["{1}"], "immutable":{2}}}'.format(description, experiment_uri, immutable)
     
-    response_header = subprocess.check_output([curl_cmd, "-s", "-i", "-H", content_header, "-H", accept_header, "-X", "POST", "-d", data, "-u", credential, url])
+    response_header = subprocess.check_output([curl_cmd, "-s", "-i", "-H", content_header, "-H", accept_header, "-H", authorization_header, "-X", "POST", "-d", data, url])
     return(dataset_id_regex.search(response_header).group(1))
 
 # pushes one file
@@ -69,30 +70,30 @@ def push_file(file, dataset_id, new_filename=None):
         metadata = '{{"dataset":"{0}", "filename":"{1}", "md5sum":"{2}", "size":"{3}", "mimetype":"{4}"}}'.format(dataset_uri, new_filename, md5sum, size, mimetype)
 
     try:
-        subprocess.check_call([curl_cmd, "-s", "-F", "attached_file={0}".format(file), "-F", "json_data={0}".format(metadata), "-u", credential, url])
+        subprocess.check_call([curl_cmd, "-s", "-F", "attached_file={0}".format(file), "-F", "json_data={0}".format(metadata), "-H", authorization_header, url])
     except:
         print("failed to push file")
 
 def experiment_exists(id):
     url = "{base_url}/api/v1/experiment/{id}/?format=json".format(base_url = mytardis_host, id = id)
-
+ 
     try:
-        response = subprocess.check_output([curl_cmd, "-s", "-u", credential, url])
-
+        response = subprocess.check_output([curl_cmd, "-s", "-H", authorization_header, url])
+ 
         if response:
             return(True)
         else:
             return(False)
     except:
         print("failed to check experiment")
-
-
+   
+   
 def dataset_exists(id):
     url = "{base_url}/api/v1/dataset/{id}/?format=json".format(base_url = mytardis_host, id = id)
-
+ 
     try:
-        response = subprocess.check_output([curl_cmd, "-s", "-u", credential, url])
-
+        response = subprocess.check_output([curl_cmd, "-s", "-H", authorization_header, url])
+ 
         if response:
             return(True)
         else:
