@@ -71,7 +71,7 @@ def create_dataset(description, experiment_id, immutable="false"):
     return(dataset_id_regex.search(response_header).group(1))
 
 # pushes one file
-def push_file(file, dataset_id, new_filename=None):
+def push_file(file, dataset_id, new_filename):
     url = "{base_url}/api/v1/dataset_file/".format(base_url = mytardis_host)
     dataset_uri = "/api/v1/dataset/{0}/".format(dataset_id)
     md5sum = check_output([md5sum_cmd, file]).split()[0]
@@ -139,10 +139,10 @@ def push_datafiles(dataset_id):
     for metadata in read_files():
         if metadata.strip():
             fp = metadata.split(';')
-            if fp[1] is not None:
+            if fp[1]:
                 push_file(fp[0], dataset_id, fp[1])
             else:
-                push_file(fp[0], dataset_id)
+                push_file(fp[0], dataset_id, None)
        
 def main():
     if has_experiment():
