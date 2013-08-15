@@ -83,7 +83,7 @@ def push_file(file, dataset_id, new_filename):
         metadata = '{{"dataset":"{0}", "filename":"{1}", "md5sum":"{2}", "size":"{3}", "mimetype":"{4}"}}'.format(dataset_uri, new_filename, md5sum, size, mimetype)
 
     try:
-        check_output([curl_cmd, "-s", "-F", "attached_file={0}".format(file), "-F", "json_data={0}".format(metadata), "-H", authorization_header, url])
+        check_output([curl_cmd, "-s", "-F", "attached_file=@{0}".format(file), "-F", "json_data={0}".format(metadata), "-H", authorization_header, url])
     except:
         print("failed to push file")
 

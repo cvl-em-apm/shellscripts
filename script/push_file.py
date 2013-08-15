@@ -80,7 +80,7 @@ def push_file(path, dataset_uri, new_filename=None):
     response_header = None
 
     try:
-        response_header = check_output([curl_cmd, "-s", "-i", "-F", "attached_file={0}".format(path), "-F", "json_data={0}".format(metadata), "-H", auth_header, url])
+        response_header = check_output([curl_cmd, "-s", "-i", "-F", "attached_file=@{0}".format(path), "-F", "json_data={0}".format(metadata), "-H", auth_header, url])
     except:
         print("Server error")
 
