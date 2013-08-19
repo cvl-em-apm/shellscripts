@@ -31,7 +31,8 @@ log_start() {
   do
     touch "$i"
   done
-  python $push_cmd "$api_key" "Application Execution History" "$start_date" "$start_file_path" || exit
+  python $push_cmd "$api_key" "Application Execution History" "$start_date" "$start_file_path"
+  check_exit
 }
 
 log_stop() {
@@ -49,9 +50,11 @@ log_stop() {
   echo -ne "Uploading data to MyTARDIS ..."
   for i in "$timing_file_path" "$stdio_file_path" "$stderr_file_path"
   do
-    python $push_cmd "$api_key" "Application Execution History" "$start_date" "$i" || exit
+    python $push_cmd "$api_key" "Application Execution History" "$start_date" "$i"
+    check_exit
   done
   python $push_cmd "$api_key" "Application Execution History" "$stop_date" "$stop_file_path"
+  check_exit
   echo " done"
   echo
 
@@ -65,5 +68,14 @@ check_api_key() {
     echo -ne "MyTARDIS key file: "
     read key_file
     cp "$key_file" "$api_key"
+  fi
+}
+
+check_exit() {
+  if [[ $? -ne 0 ]]
+  then
+    echo -ne "Press Enter to exit"
+    read enter
+    exit
   fi
 }
