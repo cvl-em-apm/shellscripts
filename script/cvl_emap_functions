@@ -31,7 +31,7 @@ log_start() {
   do
     touch "$i"
   done
-  python $push_cmd "$api_key" "Application Execution History" "$start_date" "$start_file_path"
+  python $push_cmd "$api_key" "Application Execution History" "$start_date" "$start_file_path" || exit
 }
 
 log_stop() {
@@ -49,7 +49,7 @@ log_stop() {
   echo -ne "Uploading data to MyTARDIS ..."
   for i in "$timing_file_path" "$stdio_file_path" "$stderr_file_path"
   do
-    python $push_cmd "$api_key" "Application Execution History" "$start_date" "$i"
+    python $push_cmd "$api_key" "Application Execution History" "$start_date" "$i" || exit
   done
   python $push_cmd "$api_key" "Application Execution History" "$stop_date" "$stop_file_path"
   echo " done"

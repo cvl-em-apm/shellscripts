@@ -20,7 +20,7 @@ def check_output(*popenargs, **kwargs):
         cmd = kwargs.get("args")
         if cmd is None:
             cmd = popenargs[0]
-        raise subprocess.CalledProcessError(retcode, cmd, output=error)
+        raise subprocess.CalledProcessError(retcode, cmd, output=error.rstrip("\n"))
     return output
 
 
@@ -36,7 +36,7 @@ try:
     credential = open(key_file, 'r').read()
 except IOError as e:
     print("I/O error({0}): {1}: '{2}'".format(e.errno, e.strerror, key_file))
-    sys.exit()
+    sys.exit(1)
 
 # get mytardis host configuration
 cvl_emap_conf = ConfigParser.SafeConfigParser()
@@ -57,7 +57,12 @@ def create_experiment(title, description="This experiment holds the history of a
     data = '{{"title":"{0}", "description":"{1}", "institution_name":"{2}"}}'.format(title, description, institution_name)
     url = "{base_url}/api/v1/experiment/".format(base_url=mytardis_host)
 
-    response_header = check_output([curl_cmd, "-s", "-i", "-H", content_header, "-H", accept_header, "-H", auth_header, "-X", "POST", "-d", data, url])
+    try:
+        response_header = check_output([curl_cmd, "-s", "-S", "-i", "-H", content_header, "-H", accept_header, "-H", auth_header, "-X", "POST", "-d", data, url], stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("[{0}]: {1}".format(e.cmd[-1], e.output))
+        sys.exit(1)
+
     return(experiment_uri_regex.search(response_header).group(1))
 
 
@@ -66,7 +71,12 @@ def create_dataset(description, experiment_uri, immutable="false"):
     data = '{{"description":"{0}", "experiments":["{1}"], "immutable":{2}}}'.format(description, experiment_uri, immutable)
     url = "{base_url}/api/v1/dataset/".format(base_url=mytardis_host)
 
-    response_header = check_output([curl_cmd, "-s", "-i", "-H", content_header, "-H", accept_header, "-H", auth_header, "-X", "POST", "-d", data, url])
+    try:
+        response_header = check_output([curl_cmd, "-s", "-S", "-i", "-H", content_header, "-H", accept_header, "-H", auth_header, "-X", "POST", "-d", data, url], stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("[{0}]: {1}".format(e.cmd[-1], e.output))
+        sys.exit(1)
+
     return(dataset_uri_regex.search(response_header).group(1))
 
 
@@ -85,9 +95,10 @@ def push_file(path, dataset_uri, new_filename=None):
     response_header = None
 
     try:
-        response_header = check_output([curl_cmd, "-s", "-i", "-F", "attached_file=@{0}".format(path), "-F", "json_data={0}".format(metadata), "-H", auth_header, url])
-    except:
-        print("Server error")
+        response_header = check_output([curl_cmd, "-s", "-S", "-i", "-F", "attached_file=@{0}".format(path), "-F", "json_data={0}".format(metadata), "-H", auth_header, url], stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("[{0}]: {1}".format(e.cmd[-1], e.output))
+        sys.exit(1)
 
 
 # check experiment by title, return uri if found, false if not
@@ -99,8 +110,8 @@ def experiment_exists(title):
     try:
         response = check_output([curl_cmd, "-s", "-S", "-H", auth_header, url], stderr=subprocess.PIPE)
     except subprocess.CalledProcessError as e:
-        print(e.output)
-        sys.exit()
+        print("[{0}]: {1}".format(e.cmd[-1], e.output))
+        sys.exit(1)
 
     if response:
         response_dict = json.loads(response)
@@ -116,8 +127,8 @@ def experiment_exists(title):
         # No experiment match
         return(False)
     else:
-        print("Authentication failed")
-        return(False)
+        print("Authentication error: wrong api key")
+        sys.exit(1)
 
 
 # check dataset by description, return uri if found, false if not
@@ -127,9 +138,10 @@ def dataset_exists(description):
     response = None
 
     try:
-        response = check_output([curl_cmd, "-s", "-H", auth_header, url])
-    except:
-        print("Server error")
+        response = check_output([curl_cmd, "-s", "-S", "-H", auth_header, url], stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        print("[{0}]: {1}".format(e.cmd[-1], e.output))
+        sys.exit(1)
 
     if response:
         response_dict = json.loads(response)
@@ -145,8 +157,8 @@ def dataset_exists(description):
         # No dataset match
         return(False)
     else:
-        print("Authentication failed")
-        return(False)
+        print("Authentication error: wrong api key")
+        sys.exit(1)
 
 # Tests
 '''
@@ -159,9 +171,9 @@ experiment_uri = create_experiment(experiment_title)
 dataset_uri = create_dataset(dataset_description, experiment_uri)
 dataset_uri = dataset_exists(dataset_description)
 push_file(file_path, dataset_uri)
-'''
 experiment_exists(experiment_title)
 sys.exit()
+'''
 
 # main
 experiment_uri = experiment_exists(experiment_title)
