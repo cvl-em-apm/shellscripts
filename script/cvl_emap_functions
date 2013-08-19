@@ -11,7 +11,7 @@ name=`echo "$cwd" | cut -d/ -f4`
 version=`echo "$cwd" | cut -d/ -f5`
 common_name="$originating_system $originating_system_version $name $version"
 push_cmd="/usr/local/bin/push_file.py"
-api_key="$HOME/mytardis.key"
+api_key="$HOME/.mytardis/mytardis.key"
 
 log_start() {
   start_ts=$(date +"%F %T")
@@ -31,6 +31,7 @@ log_start() {
   do
     touch "$i"
   done
+  python $push_cmd "$api_key" "Application Execution History" "$start_date" "$start_file_path"
 }
 
 log_stop() {
@@ -43,10 +44,10 @@ log_stop() {
   fi
   stop_file_path="$stop_history_path/$stop_ts ${common_name}.stop"
   touch "$stop_file_path"
-  check_api_key
+  #check_api_key
 
   echo -ne "Uploading data to MyTARDIS ..."
-  for i in "$start_file_path" "$timing_file_path" "$stdio_file_path" "$stderr_file_path"
+  for i in "$timing_file_path" "$stdio_file_path" "$stderr_file_path"
   do
     python $push_cmd "$api_key" "Application Execution History" "$start_date" "$i"
   done
