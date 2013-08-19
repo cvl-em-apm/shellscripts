@@ -50,6 +50,17 @@ auth_header = "Authorization: {0}".format(credential)
 # regex expressions
 experiment_uri_regex = re.compile(r"Location.*(/api/v1/experiment/\d+/)", re.MULTILINE)
 dataset_uri_regex = re.compile(r"Location.*(/api/v1/dataset/\d+/)", re.MULTILINE)
+credential_regex = re.compile(r"ApiKey [\w-]+:[a-z0-9]{40}")
+
+if len(credential) > 0:
+    match = credential_regex.match(credential)
+    if not match:
+        print("Api Key is invalid")
+        sys.exit(1)
+        
+else:
+    print("Api Key is empty")
+    sys.exit(1)
 
 
 # create a new experiment and return uri
