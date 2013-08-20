@@ -3,6 +3,7 @@ import sys
 import subprocess
 import re
 import os
+import json
 
 def check_output(*popenargs, **kwargs):
     if 'stdout' in kwargs:
@@ -37,7 +38,7 @@ content_header = "Content-Type: application/json"
 accept_header = "Accept: application/json"
 
 apikey = ""
-apikey_file = "/data/keys/charles.key"
+apikey_file = "/data/keys/seanl.key"
 with open(apikey_file, 'r') as f:
   apikey = f.readline().splitlines()[0]
 
@@ -71,19 +72,36 @@ def create_dataset(description, experiment_id, immutable="false"):
     return(dataset_id_regex.search(response_header).group(1))
 
 # pushes one file
-def push_file(file, dataset_id, new_filename):
+def push_file(file_path, dataset_id, old_filename, new_filename):
     url = "{base_url}/api/v1/dataset_file/".format(base_url = mytardis_host)
     dataset_uri = "/api/v1/dataset/{0}/".format(dataset_id)
-    md5sum = check_output([md5sum_cmd, file]).split()[0]
-    size = os.stat(file).st_size
-    mimetype = check_output([file_cmd, "-i", "-b", file]).split(";")[0]
+    md5sum = check_output([md5sum_cmd, file_path]).split()[0]
+    size = os.stat(file_path).st_size
+    mimetype = check_output([file_cmd, "-i", "-b", file_path]).split(";")[0]
     if new_filename is None:
-        metadata = '{{"dataset":"{0}", "filename":"{1}", "md5sum":"{2}", "size":"{3}", "mimetype":"{4}"}}'.format(dataset_uri, file, md5sum, size, mimetype)
+        metadata = { "dataset": dataset_uri, "filename": old_filename, "md5sum": md5sum, "size": size, "mimetype": mimetype }
     else:
-        metadata = '{{"dataset":"{0}", "filename":"{1}", "md5sum":"{2}", "size":"{3}", "mimetype":"{4}"}}'.format(dataset_uri, new_filename, md5sum, size, mimetype)
+        metadata = {
+            "dataset": dataset_uri,
+            "filename": new_filename,
+            "md5sum": md5sum,
+            "size": size,
+            "mimetype": mimetype,
+            "parameter_sets": [
+                {
+                "schema": "http://www.datafile.com/",
+                "parameters": [
+                    {
+                    "name": "orig_filename",
+                    "value": old_filename
+                    }
+                ]
+                }
+            ]
+        }
 
     try:
-        check_output([curl_cmd, "-s", "-F", "attached_file=@{0}".format(file), "-F", "json_data={0}".format(metadata), "-H", authorization_header, url])
+        check_output([curl_cmd, "-s", "-F", "attached_file=@{0}".format(file_path), "-F", "json_data={0}".format(json.dumps(metadata)), "-H", authorization_header, url])
     except:
         print("failed to push file")
 
@@ -138,11 +156,16 @@ def read_files():
 def push_datafiles(dataset_id):
     for metadata in read_files():
         if metadata.strip():
-            fp = metadata.split(';')
-            if fp[1]:
-                push_file(fp[0], dataset_id, fp[1])
+            file_path, orig_file_name, new_file_name = metadata.split(';')
+            if new_file_name:
+                # append original file extension
+                orig_file_ext = os.path.splitext(orig_file_name)[1]
+                new_file_ext = os.path.splitext(new_file_name)[1]
+                if orig_file_ext != new_file_ext:
+                    new_file_name = "{0}{1}".format(new_file_name, orig_file_ext)
+                push_file(file_path, dataset_id, orig_file_name, new_file_name)
             else:
-                push_file(fp[0], dataset_id, None)
+                push_file(file_path, dataset_id, orig_file_name, None)
        
 def main():
     if has_experiment():
