@@ -53,13 +53,9 @@ dataset_url_regex = re.compile(r'{base_url}/dataset/(\d+)'.format(base_url = myt
 # create a new experiment and return id
 def create_experiment(name, description="test experiment", institution="The University of Sydney"):
     data = '{{"title":"{0}", "description":"{1}", "institution_name":"{2}"}}'.format(name, description, institution)
-    print data
     url = "{base_url}/api/v1/experiment/".format(base_url = mytardis_host)
-    print url
-    print authorization_header
     response_header = check_output([curl_cmd, "-s", "-i", "-H", authorization_header, "-H", content_header, "-H", accept_header, "-X", "POST", "-d", data, url])
 
-    print response_header
     return(experiment_id_regex.search(response_header).group(1))
 
 # create a new dataset and return id
