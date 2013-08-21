@@ -75,21 +75,27 @@ def push_file(file_path, dataset_id, old_filename, new_filename):
     size = os.stat(file_path).st_size
     mimetype = check_output([file_cmd, "-i", "-b", file_path]).split(";")[0]
     if new_filename is None:
-        metadata = { "dataset": dataset_uri, "filename": old_filename, "md5sum": md5sum, "size": size, "mimetype": mimetype }
+        metadata = {
+            "dataset": "{0}".format(dataset_uri),
+            "filename": "{0}".format(old_filename),
+            "md5sum": "{0}".format(md5sum),
+            "size": "{0}".format(size),
+            "mimetype": "{0}".format(mimetype)
+       }
     else:
         metadata = {
-            "dataset": dataset_uri,
-            "filename": new_filename,
-            "md5sum": md5sum,
-            "size": size,
-            "mimetype": mimetype,
+            "dataset": "{0}".format(dataset_uri),
+            "filename": "{0}".format(new_filename),
+            "md5sum": "{0}".format(md5sum),
+            "size": "{0}".format(size),
+            "mimetype": "{0}".format(mimetype),
             "parameter_sets": [
                 {
                 "schema": "http://www.datafile.com/",
                 "parameters": [
                     {
                     "name": "orig_filename",
-                    "value": old_filename
+                    "value": "{0}".format(old_filename)
                     }
                 ]
                 }
